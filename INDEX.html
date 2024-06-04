@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas com Seleção de Cor e Controle de Tamanho do Pincel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        #container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        #canvas {
+            border: 1px solid #000;
+        }
+        #coords {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .color-palette {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .color-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .custom-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+        #brushSizeIndicator {
+            position: absolute;
+            border: 1px solid #000;
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+        }
+        .eraser {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 2px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+        .control-slider {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="coords">X: 0, Y: 0</div>
+        <div id="brushSizeIndicator"></div>
+    </div>
+
+    <div class="color-palette">
+        <div class="color-circle" style="background-color: black;"></div>
+        <div class="color-circle" style="background-color: white; border-color: #000;"></div>
+        <div class="color-circle" style="background-color: red;"></div>
+        <div class="color-circle" style="background-color: orange;"></div>
+        <div class="color-circle" style="background-color: yellow;"></div>
+        <div class="color-circle" style="background-color: green;"></div>
+        <div class="color-circle" style="background-color: blue;"></div>
+        <div class="color-circle" style="background-color: indigo;"></div>
+        <div class="color-circle" style="background-color: violet;"></div>
+        <div class="color-circle" style="background-color: gray;"></div>
+        <div class="eraser">E</div>
+        <div class="color-picker">
+            <input type="color" id="customColorPicker">
+            <div class="custom-color" id="customColorCircle"></div>
+        </div>
+    </div>
+
+    <div class="control-slider">
+        <label for="brushBlur">Desfoque do Pincel:</label>
+        <input type="range" id="brushBlur" min="0" max="10" value="0">
+    </div>
+    <div class="control-slider">
+        <label for="brushTransparency">Transparência do Pincel:</label>
+        <input type="range" id="brushTransparency" min="0" max="1" step="0.01" value="1">
+    </div>
+
+    <script>
+
+        
+        
+        const canvas = document.getElementById('canvas');
+        const container = document.getElementById('container');
+        const coords = document.getElementById('coords');
+        const customColorPicker = document.getElementById('customColorPicker');
+        const customColorCircle = document.getElementById('customColorCircle');
+        const brushSizeIndicator = document.getElementById('brushSizeIndicator');
+        const eraserButton = document.querySelector('.eraser');
+        const brushBlurSlider = document.getElementById('brushBlur');
+        const brushTransparencySlider = document.getElementById('brushTransparency');
+        const ctx = canvas.getContext('2d');
+        const undoStack = [];
+
+        let currentColor = 'black';
+        let painting = false;
+        let brushSize = 5;
+
+        function resizeCanvas() {
+            const width = window.innerWidth - 40;
+            const height = window.innerHeight - 160;
+            canvas.width = width;
+            canvas.height = height;
+            container.style.width = width + 'px';
+            container.style.height = height + 'px';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        canvas.addEventListener('mousemove', function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            coords.textContent = 'X: ' + x + ', Y: ' + y;
+            if (painting) {
+                draw(x, y);
+            }
+            showBrushSizeIndicator(x, y);
+        });
+
+        canvas.addEventListener('mousedown', function() {
+            painting = true;
+        });
+
+        canvas.addEventListener('mouseup', function() {
+            painting = false;
+            ctx.beginPath();
+            undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        });
+
+        canvas.addEventListener('mouseout', function() {
+            painting = false;
+            ctx.beginPath();
+            brushSizeIndicator.style.display = 'none';
+        });
+
+        let brushSizeUpdateTimeout;
+        canvas.addEventListener('wheel',function(event) {
+                                            clearTimeout(brushSizeUpdateTimeout);
+                                            if (event.deltaY < 0) {
+                                                brushSize = Math.min(brushSize + 2, 200);
+                                            } else {
+                                                brushSize = Math.max(brushSize - 2, 2);
+                                            }
+                                            brushSizeIndicator.style.display = 'block';
+                                            brushSizeUpdateTimeout = setTimeout(() => {
+                                                brushSizeIndicator.style.display = 'none';
+                                            }, 1000);
+                                            event.preventDefault();
+                                        });
+
+                                        function draw(x, y) {
+                                            ctx.lineWidth = brushSize;
+                                            ctx.lineCap = 'round';
+                                            ctx.globalAlpha = brushTransparencySlider.value;
+                                            ctx.filter = `blur(${brushBlurSlider.value}px)`;
+                                            if (currentColor === 'eraser') {
+                                                ctx.globalCompositeOperation = 'destination-out';
+                                            } else {
+                                                ctx.globalCompositeOperation = 'source-over';
+                                                ctx.strokeStyle = currentColor;
+                                            }
+
+                                            ctx.lineTo(x, y);
+                                            ctx.stroke();
+                                            ctx.beginPath();
+                                            ctx.moveTo(x, y);
+                                        }
+
+                                        function showBrushSizeIndicator(x, y) {
+                                            brushSizeIndicator.style.width = brushSize + 'px';
+                                            brushSizeIndicator.style.height = brushSize + 'px';
+                                            brushSizeIndicator.style.left = (x - brushSize / 2) + 'px';
+                                            brushSizeIndicator.style.top = (y - brushSize / 2) + 'px';
+                                            brushSizeIndicator.style.backgroundColor = currentColor === 'eraser' ? 'white' : currentColor;
+                                            brushSizeIndicator.style.borderColor = currentColor === 'eraser' ? 'gray' : 'black';
+                                            brushSizeIndicator.style.display = 'block';
+                                        }
+
+                                        customColorPicker.addEventListener('input', function() {
+                                            customColorCircle.style.backgroundColor = customColorPicker.value;
+                                            currentColor = customColorPicker.value;
+                                        });
+
+                                        const colorCircles = document.querySelectorAll('.color-circle');
+                                        colorCircles.forEach(circle => {
+                                            circle.addEventListener('click', function() {
+                                                currentColor = circle.style.backgroundColor;
+                                            });
+                                        });
+
+                                        customColorCircle.addEventListener('click', function() {
+                                            currentColor = customColorCircle.style.backgroundColor;
+                                        });
+
+                                        eraserButton.addEventListener('click', function() {
+                                            currentColor = 'eraser';
+                                        });
+
+                                        document.addEventListener('keydown', function(event) {
+                                            if (event.ctrlKey && event.key === 'z') {
+                                                undo();
+                                            } else if (event.key === 'c') {
+                                                clearCanvas();
+                                            }
+                                        });
+
+                                        function undo() {
+                                            if (undoStack.length > 0) {
+                                                ctx.putImageData(undoStack.pop(), 0, 0);
+                                            }
+                                        }
+
+                                        function clearCanvas() {
+                                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                            undoStack.length = 0;
+                                        }
+                                    </script>
+                                </body>
+                                </html>
