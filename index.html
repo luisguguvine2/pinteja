@@ -7,22 +7,27 @@
     <title>Canvas com Seleção de Cor e Controle de Tamanho do Pincel</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #f8f9fa;
             flex-direction: column;
         }
         #container {
             position: relative;
             margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #ffffff;
         }
         #canvas {
-            border: 1px solid #000;
+            border: none;
+            border-radius: 10px;
         }
         #coords {
             position: absolute;
@@ -32,32 +37,39 @@
             color: white;
             padding: 5px 10px;
             border-radius: 5px;
+            font-size: 14px;
+            transition: opacity 0.3s ease;
         }
         .color-palette {
             display: flex;
             justify-content: center;
             gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
         }
-        .color-circle {
-            width: 30px;
-            height: 30px;
+        .color-circle, .eraser, .custom-color {
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid #fff;
-            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        .color-circle:hover, .eraser:hover, .custom-color:hover {
+            transform: scale(1.1);
+        }
+        .eraser {
+            background-color: #f0f0f0;
+            border: 2px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .color-picker {
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-        .custom-color {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid #fff;
-            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
         }
         #brushSizeIndicator {
             position: absolute;
@@ -66,56 +78,67 @@
             pointer-events: none;
             display: none;
         }
-        .eraser {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            background-color: #f0f0f0;
-            border: 2px solid #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-        }
         .control-slider {
             margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .control-slider label {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .control-slider input {
+            -webkit-appearance: none;
+            width: 150px;
+            height: 5px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            border-radius: 5px;
+        }
+        .control-slider input:hover {
+            opacity: 1;
+        }
+        .control-slider input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .control-slider input::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 <body>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4555881170778425"
-     crossorigin="anonymous"></script>
-<!-- anuncio -->
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-4555881170778425"
-     data-ad-slot="9308246206"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4555881170778425"
-     crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4555881170778425" crossorigin="anonymous"></script>
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4555881170778425" data-ad-slot="9308246206" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+
     <div id="container">
         <canvas id="canvas"></canvas>
         <div id="coords">X: 0, Y: 0</div>
         <div id="brushSizeIndicator"></div>
     </div>
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4555881170778425"
-     crossorigin="anonymous"></script>
-<!-- anuncio  grafico -->
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-4555881170778425"
-     data-ad-slot="5800246034"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4555881170778425" crossorigin="anonymous"></script>
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4555881170778425" data-ad-slot="5800246034" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
 
     <div class="color-palette">
         <div class="color-circle" style="background-color: black;"></div>
@@ -145,9 +168,6 @@
     </div>
 
     <script>
-
-        
-        
         const canvas = document.getElementById('canvas');
         const container = document.getElementById('container');
         const coords = document.getElementById('coords');
@@ -204,86 +224,86 @@
         });
 
         let brushSizeUpdateTimeout;
-        canvas.addEventListener('wheel',function(event) {
-                                            clearTimeout(brushSizeUpdateTimeout);
-                                            if (event.deltaY < 0) {
-                                                brushSize = Math.min(brushSize + 2, 200);
-                                            } else {
-                                                brushSize = Math.max(brushSize - 2, 2);
-                                            }
-                                            brushSizeIndicator.style.display = 'block';
-                                            brushSizeUpdateTimeout = setTimeout(() => {
-                                                brushSizeIndicator.style.display = 'none';
-                                            }, 1000);
-                                            event.preventDefault();
-                                        });
+        canvas.addEventListener('wheel', function(event) {
+            clearTimeout(brushSizeUpdateTimeout);
+            if (event.deltaY < 0) {
+                brushSize = Math.min(brushSize + 2, 200);
+            } else {
+                brushSize = Math.max(brushSize - 2, 2);
+            }
+            brushSizeIndicator.style.display = 'block';
+            brushSizeUpdateTimeout = setTimeout(() => {
+                brushSizeIndicator.style.display = 'none';
+            }, 1000);
+            event.preventDefault();
+        });
 
-                                        function draw(x, y) {
-                                            ctx.lineWidth = brushSize;
-                                            ctx.lineCap = 'round';
-                                            ctx.globalAlpha = brushTransparencySlider.value;
-                                            ctx.filter = `blur(${brushBlurSlider.value}px)`;
-                                            if (currentColor === 'eraser') {
-                                                ctx.globalCompositeOperation = 'destination-out';
-                                            } else {
-                                                ctx.globalCompositeOperation = 'source-over';
-                                                ctx.strokeStyle = currentColor;
-                                            }
+        function draw(x, y) {
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = brushTransparencySlider.value;
+            ctx.filter = `blur(${brushBlurSlider.value}px)`;
+            if (currentColor === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = currentColor;
+            }
 
-                                            ctx.lineTo(x, y);
-                                            ctx.stroke();
-                                            ctx.beginPath();
-                                            ctx.moveTo(x, y);
-                                        }
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
 
-                                        function showBrushSizeIndicator(x, y) {
-                                            brushSizeIndicator.style.width = brushSize + 'px';
-                                            brushSizeIndicator.style.height = brushSize + 'px';
-                                            brushSizeIndicator.style.left = (x - brushSize / 2) + 'px';
-                                            brushSizeIndicator.style.top = (y - brushSize / 2) + 'px';
-                                            brushSizeIndicator.style.backgroundColor = currentColor === 'eraser' ? 'white' : currentColor;
-                                            brushSizeIndicator.style.borderColor = currentColor === 'eraser' ? 'gray' : 'black';
-                                            brushSizeIndicator.style.display = 'block';
-                                        }
+        function showBrushSizeIndicator(x, y) {
+            brushSizeIndicator.style.width = brushSize + 'px';
+            brushSizeIndicator.style.height = brushSize + 'px';
+            brushSizeIndicator.style.left = (x - brushSize / 2) + 'px';
+            brushSizeIndicator.style.top = (y - brushSize / 2) + 'px';
+            brushSizeIndicator.style.backgroundColor = currentColor === 'eraser' ? 'white' : currentColor;
+            brushSizeIndicator.style.borderColor = currentColor === 'eraser' ? 'gray' : 'black';
+            brushSizeIndicator.style.display = 'block';
+        }
 
-                                        customColorPicker.addEventListener('input', function() {
-                                            customColorCircle.style.backgroundColor = customColorPicker.value;
-                                            currentColor = customColorPicker.value;
-                                        });
+        customColorPicker.addEventListener('input', function() {
+            customColorCircle.style.backgroundColor = customColorPicker.value;
+            currentColor = customColorPicker.value;
+        });
 
-                                        const colorCircles = document.querySelectorAll('.color-circle');
-                                        colorCircles.forEach(circle => {
-                                            circle.addEventListener('click', function() {
-                                                currentColor = circle.style.backgroundColor;
-                                            });
-                                        });
+        const colorCircles = document.querySelectorAll('.color-circle');
+        colorCircles.forEach(circle => {
+            circle.addEventListener('click', function() {
+                currentColor = circle.style.backgroundColor;
+            });
+        });
 
-                                        customColorCircle.addEventListener('click', function() {
-                                            currentColor = customColorCircle.style.backgroundColor;
-                                        });
+        customColorCircle.addEventListener('click', function() {
+            currentColor = customColorCircle.style.backgroundColor;
+        });
 
-                                        eraserButton.addEventListener('click', function() {
-                                            currentColor = 'eraser';
-                                        });
+        eraserButton.addEventListener('click', function() {
+            currentColor = 'eraser';
+        });
 
-                                        document.addEventListener('keydown', function(event) {
-                                            if (event.ctrlKey && event.key === 'z') {
-                                                undo();
-                                            } else if (event.key === 'c') {
-                                                clearCanvas();
-                                            }
-                                        });
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'z') {
+                undo();
+            } else if (event.key === 'c') {
+                clearCanvas();
+            }
+        });
 
-                                        function undo() {
-                                            if (undoStack.length > 0) {
-                                                ctx.putImageData(undoStack.pop(), 0, 0);
-                                            }
-                                        }
+        function undo() {
+            if (undoStack.length > 0) {
+                ctx.putImageData(undoStack.pop(), 0, 0);
+            }
+        }
 
-                                        function clearCanvas() {
-                                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                                            undoStack.length = 0;
-                                        }
-                                    </script>
-                                </body>
-                                </html>
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            undoStack.length = 0;
+        }
+    </script>
+</body>
+</html>
