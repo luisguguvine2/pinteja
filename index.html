@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="https://ideogram.ai/assets/image/lossless/response/eY_8vEzZR2G8uNd5SVZXXw">
-    <title>pinte agora !!</title>
+    <title>Pinte Agora!</title>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -119,6 +119,45 @@
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .link {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #E1306C;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .link:hover {
+            background-color: #C2185B;
+            transform: scale(1.05);
+        }
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4555881170778425" crossorigin="anonymous"></script>
 </head>
@@ -142,11 +181,6 @@
         <div id="coords">X: 0, Y: 0</div>
         <div id="brushSizeIndicator"></div>
     </div>
-
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4555881170778425" data-ad-slot="9308246206" data-ad-format="auto" data-full-width-responsive="true"></ins>
-    <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
 
     <div class="color-palette">
         <div class="color-circle" style="background-color: black;"></div>
@@ -175,6 +209,12 @@
         <input type="range" id="brushTransparency" min="0" max="1" step="0.01" value="1">
     </div>
 
+    <!-- Botões de ação -->
+    <div class="action-buttons">
+        <button id="downloadBtn" class="button">Baixar como PNG</button>
+        <a href="https://www.instagram.com/sua_conta" id="instagramLink" class="link">Visite nosso Instagram</a>
+    </div>
+
     <script>
         const canvas = document.getElementById('canvas');
         const container = document.getElementById('container');
@@ -185,133 +225,166 @@
         const eraserButton = document.querySelector('.eraser');
         const brushBlurSlider = document.getElementById('brushBlur');
         const brushTransparencySlider = document.getElementById('brushTransparency');
-        const ctx = canvas.getContext('2d');
-        const undoStack = [];
+        const ctx =canvas.getContext('2d');
+                    const undoStack = [];
 
-        let currentColor = 'black';
-        let painting = false;
-        let brushSize = 5;
+                    let currentColor = 'black';
+                    let painting = false;
+                    let brushSize = 5;
 
-        function resizeCanvas() {
-            const width = window.innerWidth - 40;
-            const height = window.innerHeight - 160;
-            canvas.width = width;
-            canvas.height = height;
-            container.style.width = width + 'px';
-            container.style.height = height + 'px';
-        }
+                    function resizeCanvas() {
+                        const width = window.innerWidth * 0.9;
+                        const height = window.innerHeight * 0.8;
+                        canvas.width = width;
+                        canvas.height = height;
+                        container.style.width = width + 'px';
+                        container.style.height = height + 'px';
+                    }
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+                    window.addEventListener('resize', resizeCanvas);
+                    resizeCanvas();
 
-        canvas.addEventListener('mousemove', function(event) {
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            coords.textContent = 'X: ' + x + ', Y: ' + y;
-            if (painting) {
-                draw(x, y);
-            }
-            showBrushSizeIndicator(x, y);
-        });
+                    canvas.addEventListener('mousemove', function(event) {
+                        const rect = canvas.getBoundingClientRect();
+                        const x = event.clientX - rect.left;
+                        const y = event.clientY - rect.top;
+                        coords.textContent = 'X: ' + x + ', Y: ' + y;
+                        if (painting) {
+                            draw(x, y);
+                        }
+                        showBrushSizeIndicator(x, y);
+                    });
 
-        canvas.addEventListener('mousedown', function() {
-            painting = true;
-        });
+                    container.addEventListener('mouseleave', function() {
+                        coords.style.opacity = '0';
+                    });
 
-        canvas.addEventListener('mouseup', function() {
-            painting = false;
-            ctx.beginPath();
-            undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-        });
+                    canvas.addEventListener('mousedown', function(event) {
+                        painting = true;
+                        const rect = canvas.getBoundingClientRect();
+                        const x = event.clientX - rect.left;
+                        const y = event.clientY - rect.top;
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                    });
 
-        canvas.addEventListener('mouseout', function() {
-            painting = false;
-            ctx.beginPath();
-            brushSizeIndicator.style.display = 'none';
-        });
+                    canvas.addEventListener('mouseup', function() {
+                        painting = false;
+                        ctx.beginPath();
+                        undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                    });
 
-        let brushSizeUpdateTimeout;
-        canvas.addEventListener('wheel', function(event) {
-            clearTimeout(brushSizeUpdateTimeout);
-            if (event.deltaY < 0) {
-                brushSize = Math.min(brushSize + 2, 200);
-            } else {
-                brushSize = Math.max(brushSize - 2, 2);
-            }
-            brushSizeIndicator.style.display = 'block';
-            brushSizeUpdateTimeout = setTimeout(() => {
-                brushSizeIndicator.style.display = 'none';
-            }, 1000);
-            event.preventDefault();
-        });
+                    canvas.addEventListener('mouseout', function() {
+                        painting = false;
+                        ctx.beginPath();
+                        brushSizeIndicator.style.display = 'none';
+                    });
 
-        function draw(x, y) {
-            ctx.lineWidth = brushSize;
-            ctx.lineCap = 'round';
-            ctx.globalAlpha = brushTransparencySlider.value;
-            ctx.filter = `blur(${brushBlurSlider.value}px)`;
-            if (currentColor === 'eraser') {
-                ctx.globalCompositeOperation = 'destination-out';
-            } else {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = currentColor;
-            }
+                    let brushSizeUpdateTimeout;
+                    canvas.addEventListener('wheel', function(event) {
+                        clearTimeout(brushSizeUpdateTimeout);
+                        if (event.deltaY < 0) {
+                            brushSize = Math.min(brushSize + 2, 200);
+                        } else {
+                            brushSize = Math.max(brushSize - 2, 2);
+                        }
+                        brushSizeIndicator.style.display = 'block';
+                        brushSizeUpdateTimeout = setTimeout(() => {
+                            brushSizeIndicator.style.display = 'none';
+                        }, 1000);
+                        event.preventDefault();
+                    });
 
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-        }
+                    function draw(x, y) {
+                        ctx.lineWidth = brushSize;
+                        ctx.lineCap = 'round';
+                        ctx.globalAlpha = brushTransparencySlider.value;
+                        ctx.filter = `blur(${brushBlurSlider.value}px)`;
+                        if (currentColor === 'eraser') {
+                            ctx.globalCompositeOperation = 'destination-out';
+                        } else {
+                            ctx.globalCompositeOperation = 'source-over';
+                            ctx.strokeStyle = currentColor;
+                        }
 
-        function showBrushSizeIndicator(x, y) {
-            brushSizeIndicator.style.width = brushSize + 'px';
-            brushSizeIndicator.style.height = brushSize + 'px';
-            brushSizeIndicator.style.left = (x - brushSize / 2) + 'px';
-            brushSizeIndicator.style.top = (y - brushSize / 2) + 'px';
-            brushSizeIndicator.style.backgroundColor = currentColor === 'eraser' ? 'white' : currentColor;
-            brushSizeIndicator.style.borderColor = currentColor === 'eraser' ? 'gray' : 'black';
-            brushSizeIndicator.style.display = 'block';
-        }
+                        ctx.lineTo(x, y);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                    }
 
-        customColorPicker.addEventListener('input', function() {
-            customColorCircle.style.backgroundColor = customColorPicker.value;
-            currentColor = customColorPicker.value;
-        });
+                    function showBrushSizeIndicator(x, y) {
+                        brushSizeIndicator.style.width = brushSize + 'px';
+                        brushSizeIndicator.style.height = brushSize + 'px';
+                        brushSizeIndicator.style.left = (x - brushSize / 2) + 'px';
+                        brushSizeIndicator.style.top = (y - brushSize / 2) + 'px';
+                        brushSizeIndicator.style.backgroundColor = currentColor === 'eraser' ? 'white' : currentColor;
+                        brushSizeIndicator.style.borderColor = currentColor === 'eraser' ? 'gray' : 'black';
+                        brushSizeIndicator.style.display = 'block';
+                    }
 
-        const colorCircles = document.querySelectorAll('.color-circle');
-        colorCircles.forEach(circle => {
-            circle.addEventListener('click', function() {
-                currentColor = circle.style.backgroundColor;
-            });
-        });
+                    customColorPicker.addEventListener('input', function() {
+                        customColorCircle.style.backgroundColor = customColorPicker.value;
+                        currentColor = customColorPicker.value;
+                    });
 
-        customColorCircle.addEventListener('click', function() {
-            currentColor = customColorCircle.style.backgroundColor;
-        });
+                    const colorCircles = document.querySelectorAll('.color-circle');
+                    colorCircles.forEach(circle => {
+                        circle.addEventListener('click', function() {
+                            currentColor = circle.style.backgroundColor;
+                        });
+                    });
 
-        eraserButton.addEventListener('click', function() {
-            currentColor = 'eraser';
-        });
+                    customColorCircle.addEventListener('click', function() {
+                        currentColor = customColorCircle.style.backgroundColor;
+                    });
 
-        document.addEventListener('keydown', function(event) {
-            if (event.ctrlKey && event.key === 'z') {
-                undo();
-            } else if (event.key === 'c') {
-                clearCanvas();
-            }
-        });
+                    eraserButton.addEventListener('click', function() {
+                        currentColor = 'eraser';
+                    });
 
-        function undo() {
-            if (undoStack.length > 0) {
-                ctx.putImageData(undoStack.pop(), 0, 0);
-            }
-        }
+                    document.addEventListener('keydown', function(event) {
+                        if (event.ctrlKey && event.key === 'z') {
+                            undo();
+                        } else if (event.key === 'c') {
+                            clearCanvas();
+                        }
+                    });
 
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            undoStack.length = 0;
-        }
-    </script>
-</body>
-</html>
+                    function undo() {
+                        if (undoStack.length > 0) {
+                            ctx.putImageData(undoStack.pop(), 0, 0);
+                        }
+                    }
+
+                    function clearCanvas() {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        undoStack.length = 0;
+                    }
+
+                    // Função para baixar o canvas como PNG
+                    const downloadBtn = document.getElementById('downloadBtn');
+                    downloadBtn.addEventListener('click', function() {
+                        const fileName = prompt('Digite o nome do arquivo:');
+                        if (!fileName) return;
+
+                        const bgChoice = confirm('Clique em OK para fundo transparente ou Cancelar para fundo branco');
+                        const tempCanvas = document.createElement('canvas');
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCanvas.width = canvas.width;
+                        tempCanvas.height = canvas.height;
+
+                        if (!bgChoice) {
+                            tempCtx.fillStyle = 'white';
+                            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                        }
+
+                        tempCtx.drawImage(canvas, 0, 0);
+                        const link = document.createElement('a');
+                        link.download = `${fileName}.png`;
+                        link.href = tempCanvas.toDataURL();
+                        link.click();
+                    });
+                </script>
+            </body>
+            </html>
